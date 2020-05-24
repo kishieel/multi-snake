@@ -37,16 +37,18 @@ socket.on('update', function(players, fruits) {
 		context.fillRect(pos.x, pos.y, 20, 20);
 	}
 
+	const me = players[ socket.id ]
+
 	for (var id in players) {
 		var player = players[id];
 		context.beginPath();
-		// context.fillStyle = "#" + player.color;
-		var my_gradient = context.createLinearGradient(0, 0, 0, 200);
-		my_gradient.addColorStop(0, "green");
-		my_gradient.addColorStop(1, "gray");
-		context.fillStyle = my_gradient;
+		context.fillStyle = `#${player.color}`
 		for ( const pos of player.position ) {
 			context.fillRect(pos.x, pos.y, 20, 20);
+
+			if ( socket.id !== id ) {
+				
+			}
 		}
 	}
 });
