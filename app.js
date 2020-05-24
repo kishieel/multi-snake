@@ -7,15 +7,17 @@ const app = express()
 const server = http.Server( app )
 const io = socketIO( server )
 
-app.set('port', 8080)
-app.use('/game', express.static(__dirname + '/game'));
+const port = 3000
+
+app.set('port', port)
+app.use('/public', express.static(__dirname + '/public'));
 
 app.get('/', function( req, res ) {
-	res.sendFile( path.join( __dirname, '/game/index.html' ) )
+	res.sendFile( path.join( __dirname, '/public/index.html' ) )
 })
 
-server.listen( 8080, function() {
-	console.log('Server starting on port 8080')
+server.listen( port, function() {
+	console.log(`Server starting on port ${port}`)
 })
 
 const randomPosition = ( ) => {
