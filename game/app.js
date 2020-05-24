@@ -1,42 +1,46 @@
-var socket = io();
+const socket = io()
 
-document.addEventListener('keydown', function(event) {
-	switch (event.keyCode) {
+document.addEventListener('keydown', (e) => {
+	switch( e.keyCode ) {
 		case 65: // A
-			socket.emit('movement', [-1, 0])
-			break;
+			socket.emit('move', [-1,0])
+			break
 		case 87: // W
-			socket.emit('movement', [0, -1])
-			break;
+			socket.emit('move', [0,-1])
+			break
 		case 68: // D
-			socket.emit('movement', [1, 0])
-			break;
+			socket.emit('move', [1,0])
+			break
 		case 83: // S
-			socket.emit('movement', [0, 1])
-			break;
-		case 32: // A
-			socket.emit('cheat')
-			break;
+			socket.emit('move', [0,1])
+			break
+		case 32: // SPACE
+			socket.emit('death')
+			break
 	}
-});
+})
 
-socket.emit('new player');
+const canvas = document.querySelector('canvas')
+const ctx = canvas.getContext('2d')
 
-var canvas = document.querySelector('canvas');
-canvas.width = 960;
-canvas.height = 580;
+socket.on('update', function( state ) {
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-var context = canvas.getContext('2d');
+	const player = state.players[ socket.id ]
 
-socket.on('update', function(players, fruits) {
-	context.clearRect(0, 0, 960, 580);
+	ctx.beginPath()
+	ctx.fillStyle = 'gold'
+	for ( const [i, pos] of state.fruits.entries() ) {
 
-	context.fillStyle = "gold";
-	context.beginPath();
-	for ( const pos of fruits ) {
-		context.fillRect(pos.x, pos.y, 20, 20);
+		if ( player.positions[0].x === pos.x && player.positions[0].y === pos.y ) {
+			socket.emit('eat', i)
+			continue
+		}
+
+		ctx.fillRect( pos.x, pos.y, 20, 20 )
 	}
 
+<<<<<<< HEAD
 	const me = players[ socket.id ]
 
 	for (var id in players) {
@@ -48,7 +52,22 @@ socket.on('update', function(players, fruits) {
 
 			if ( socket.id !== id ) {
 				
+=======
+	for ( const id in state.players ) {
+		const snake = state.players[ id ]
+
+		ctx.beginPath()
+		ctx.fillStyle = `#${snake.color}`
+		for ( const pos of snake.positions ) {
+			ctx.fillRect( pos.x, pos.y, 20, 20 )
+
+			if ( id !== socket.id ) {
+				if ( player.positions[0].x === pos.x && player.positions[0].y === pos.y ) {
+					socket.emit('death')
+				}
+>>>>>>> 0f30ac2accf684b67e800b245cef6cbda93a1c82
 			}
 		}
 	}
-});
+
+})
