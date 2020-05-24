@@ -1,77 +1,92 @@
-var express = require('express');
-var http = require('http');
-var path = require('path');
-var socketIO = require('socket.io');
+const express = require('express')
+const http = require('http')
+const socketIO = require('socket.io')
+const path = require('path')
 
-var app = express();
-var server = http.Server(app);
-var io = socketIO(server);
+const app = express()
+const server = http.Server( app )
+const io = socketIO( server )
 
-app.set('port', 8080);
+app.set('port', 8080)
 app.use('/game', express.static(__dirname + '/game'));
 
-app.get('/', function(request, response) {
-  	response.sendFile(path.join(__dirname, '/game/index.html'));
-});
+app.get('/', function( req, res ) {
+	res.sendFile( path.join( __dirname, '/game/index.html' ) )
+})
 
-server.listen(8080, function() {
-  	console.log('Starting server on port 8080');
-});
+server.listen( 8080, function() {
+	console.log('Server starting on port 8080')
+})
 
-var players = {};
-var fruits = [];
-io.on('connection', function(socket) {
-	socket.on('new player', function() {
-		players[socket.id] = {
-			position: [ {x: 300, y: 300},{x: 300, y: 300} ],
-			direction: [1, 0],
-			length: 10,
-			color: Math.floor(Math.random() * 16777215).toString(16),
-		};
-		fruits.push({ x: Math.round(Math.random() * 47) * 20 , y: Math.round(Math.random() * 28) * 20})
-	});
-	socket.on('movement', function(data) {
-		var player = players[socket.id] || {};
-		player.direction = data;
-	});
-	socket.on('cheat', function() {
-		var player = players[socket.id] || {};
-		player.position.push({ ...player.position[0] });
-	});
-	socket.on('disconnect', function() {
-		delete players[socket.id];
-		fruits.pop();
-	})
-});
+const randomPosition = ( ) => {
+	return { x: Math.round( Math.random() * 46 ) * 20, y: Math.round( Math.random() * 27 ) * 20 }
+}
 
-setInterval(function() {
-	for ( const id in players ) {
-		players[id].position[0].x += players[id].direction[0] * 20;
-		players[id].position[0].y += players[id].direction[1] * 20;
+const randomDirection = () => {
+	const dir = [ [-1, 0], [1,0], [0,-1], [0,1] ]
+	return dir[ Math.floor(Math.random() * ( dir.length )) ]
+}
 
-
-		fruits.forEach((fruit, i) => {
-			if ( players[id].position[0].x === fruit.x && players[id].position[0].y === fruit.y ) {
-				 players[id].position.push({ ...players[id].position[0] });
-				 fruits.splice(i, 1);
-			 	fruits.push({ x: Math.round(Math.random() * 48) * 20 , y: Math.round(Math.random() * 29) * 20})
-			}
-		});
-
-		if ( players[id].position[0].x >= 960 ) {
-			players[id].position[0].x = 0;
-		} else if ( players[id].position[0].x < 0 ) {
-			players[id].position[0].x = 940;
-		} else if ( players[id].position[0].y >= 580 ) {
-			players[id].position[0].y = 0;
-		} else if ( players[id].position[0].y < 0 ) {
-			players[id].position[0].y = 560;
-		}
-
-		for ( let i = players[id].position.length - 1; i > 0 ; i-- ) {
-			players[id].position[i].x = players[id].position[i - 1].x;
-			players[id].position[i].y = players[id].position[i - 1].y;
-		}
+const state = {
+	players: {},
+	fruits: []
+}
+io.on('connection', function( socket ) {
+	state.players[ socket.id ] = {
+		positions: [ randomPosition(), { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 } ],
+		direction: randomDirection(),
+		color: Math.floor( Math.random() * 0xffffff ).toString(16)
 	}
-	io.sockets.emit('update', players, fruits);
-}, 100);
+	state.fruits.push( randomPosition() )
+
+	socket.on('move', ( dir ) => {
+		state.players[ socket.id ].direction = dir
+	})
+
+	socket.on('eat', ( index ) => {
+		state.fruits.splice( index, 1 )
+		state.players[ socket.id ].positions.push( { ...state.players[ socket.id ].positions[0] } )
+
+		if ( state.fruits.length < Object.keys( state.players ).length || state.fruits.length === 0 ) {
+			state.fruits.push( randomPosition() )
+		}
+
+	})
+
+	socket.on('death', () => {
+		const snake = state.players[ socket.id ]
+		for ( let i = 1; i < snake.positions.length; i += 2 ) {
+			state.fruits.push( { ...snake.positions[ i ] } )
+		}
+		state.players[ socket.id ].positions.splice( 1 )
+	})
+
+	socket.on('disconnect', () => {
+		delete state.players[ socket.id ]
+	})
+})
+
+setInterval( () => {
+	for ( const id in state.players ) {
+		const snake = state.players[ id ]
+
+		if ( snake.positions[0].x >= 960 ) {
+			snake.positions[0].x = 0
+		} else if ( snake.positions[0].x < 0 ) {
+			snake.positions[0].x = 960
+		} else if ( snake.positions[0].y >= 580 ) {
+			snake.positions[0].y = 0
+		} else if ( snake.positions[0].y < 0 ) {
+			snake.positions[0].y = 580
+		}
+
+		for ( let i = snake.positions.length - 1; i > 0; i-- ) {
+			snake.positions[i].x = snake.positions[i - 1].x
+			snake.positions[i].y = snake.positions[i - 1].y
+		}
+
+		snake.positions[0].x += snake.direction[0] * 20
+		snake.positions[0].y += snake.direction[1] * 20
+	}
+	io.sockets.emit('update', state)
+}, 100 )
