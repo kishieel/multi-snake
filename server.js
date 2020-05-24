@@ -53,7 +53,7 @@ io.on('connection', function( socket ) {
 
 	})
 
-	socket.on('death', () => {
+	socket.on('death', ( ) => {
 		const snake = state.players[ socket.id ]
 		for ( let i = 1; i < snake.positions.length; i += 2 ) {
 			state.fruits.push( { ...snake.positions[ i ] } )
@@ -61,7 +61,7 @@ io.on('connection', function( socket ) {
 		state.players[ socket.id ].positions.splice( 1 )
 	})
 
-	socket.on('disconnect', () => {
+	socket.on('disconnect', ( ) => {
 		delete state.players[ socket.id ]
 	})
 })
