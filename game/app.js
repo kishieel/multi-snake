@@ -40,7 +40,6 @@ socket.on('update', function( state ) {
 		ctx.fillRect( pos.x, pos.y, 20, 20 )
 	}
 
-<<<<<<< HEAD
 	const me = players[ socket.id ]
 
 	for (var id in players) {
@@ -51,8 +50,7 @@ socket.on('update', function( state ) {
 			context.fillRect(pos.x, pos.y, 20, 20);
 
 			if ( socket.id !== id ) {
-				
-=======
+
 	for ( const id in state.players ) {
 		const snake = state.players[ id ]
 
@@ -65,7 +63,6 @@ socket.on('update', function( state ) {
 				if ( player.positions[0].x === pos.x && player.positions[0].y === pos.y ) {
 					socket.emit('death')
 				}
->>>>>>> 0f30ac2accf684b67e800b245cef6cbda93a1c82
 			}
 		}
 	}
