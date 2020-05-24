@@ -35,7 +35,7 @@ const state = {
 }
 io.on('connection', function( socket ) {
 	state.players[ socket.id ] = {
-		positions: [ randomPosition(), { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 }, { x: -60, y: -60 } ],
+		positions: [ randomPosition(), { x: -100, y: -100 }, { x: -100, y: -100 }, ],
 		direction: randomDirection(),
 		color: Math.floor( Math.random() * 0xffffff ).toString(16)
 	}
@@ -52,13 +52,15 @@ io.on('connection', function( socket ) {
 		if ( state.fruits.length < Object.keys( state.players ).length || state.fruits.length === 0 ) {
 			state.fruits.push( randomPosition() )
 		}
-
 	})
 
 	socket.on('death', ( ) => {
 		const snake = state.players[ socket.id ]
 		for ( let i = 1; i < snake.positions.length; i += 2 ) {
-			state.fruits.push( { ...snake.positions[ i ] } )
+	  		const  fruit = { ...snake.positions[ i ] }
+	  		if ( fruit.x >= 0 && fruit.x < 960 && fruit.y >=0 && fruit.y< 580 ) {
+	    		state.fruits.push( fruit )
+	  		}
 		}
 		state.players[ socket.id ].positions.splice( 1 )
 	})
@@ -72,23 +74,23 @@ setInterval( () => {
 	for ( const id in state.players ) {
 		const snake = state.players[ id ]
 
-		if ( snake.positions[0].x >= 960 ) {
-			snake.positions[0].x = 0
-		} else if ( snake.positions[0].x < 0 ) {
-			snake.positions[0].x = 960
-		} else if ( snake.positions[0].y >= 580 ) {
-			snake.positions[0].y = 0
-		} else if ( snake.positions[0].y < 0 ) {
-			snake.positions[0].y = 580
-		}
-
 		for ( let i = snake.positions.length - 1; i > 0; i-- ) {
-			snake.positions[i].x = snake.positions[i - 1].x
-			snake.positions[i].y = snake.positions[i - 1].y
+	  		snake.positions[i].x = snake.positions[i - 1].x
+	  		snake.positions[i].y = snake.positions[i - 1].y
 		}
 
 		snake.positions[0].x += snake.direction[0] * 20
 		snake.positions[0].y += snake.direction[1] * 20
+
+		if ( snake.positions[0].x >= 960 ) {
+		  	snake.positions[0].x = 0
+		} else if ( snake.positions[0].x < 0 ) {
+		  	snake.positions[0].x = 960
+		} else if ( snake.positions[0].y >= 580 ) {
+			snake.positions[0].y = 0
+		} else if ( snake.positions[0].y < 0 ) {
+		  	snake.positions[0].y = 580
+		}
 	}
 	io.sockets.emit('update', state)
 }, 100 )

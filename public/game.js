@@ -40,17 +40,6 @@ socket.on('update', function( state ) {
 		ctx.fillRect( pos.x, pos.y, 20, 20 )
 	}
 
-	const me = players[ socket.id ]
-
-	for (var id in players) {
-		var player = players[id];
-		context.beginPath();
-		context.fillStyle = `#${player.color}`
-		for ( const pos of player.position ) {
-			context.fillRect(pos.x, pos.y, 20, 20);
-
-			if ( socket.id !== id ) {
-
 	for ( const id in state.players ) {
 		const snake = state.players[ id ]
 
